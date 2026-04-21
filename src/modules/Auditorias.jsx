@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { B } from "../design/tokens.js";
 import { AUDITORIAS_INIT } from "../data/mockData.js";
+import { useAppDoc } from "../hooks/useAppDoc.js";
 import ModuleHeader from "../components/ModuleHeader.jsx";
 import Destello from "../components/Destello.jsx";
 
@@ -11,7 +12,7 @@ const scoreColor = (s) => s >= 8 ? B.green : s >= 6 ? "#CAA150" : B.red;
 const scoreBg    = (s) => s >= 8 ? B.greenPale : s >= 6 ? B.goldPale : B.redPale;
 
 export default function Auditorias({ user, onBack }) {
-  const [auditorias, setAuditorias] = useState(AUDITORIAS_INIT);
+  const [auditorias, setAuditorias] = useAppDoc("auditorias", AUDITORIAS_INIT);
   const [expanded, setExpanded] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editMode, setEditMode] = useState(false);

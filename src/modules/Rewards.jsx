@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { B } from "../design/tokens.js";
 import { REWARDS_PERSONAS, DESTELLOS_REWARDS } from "../data/mockData.js";
+import { useAppDoc } from "../hooks/useAppDoc.js";
 import ModuleHeader from "../components/ModuleHeader.jsx";
 import Destello from "../components/Destello.jsx";
 import PatternBg from "../components/PatternBg.jsx";
@@ -10,7 +11,7 @@ const fmt = n => `$${Number(n).toLocaleString("es-AR")}`;
 export default function Rewards({ user, onBack }) {
   const [tab, setTab] = useState("ranking");
   const [editMode, setEditMode] = useState(false);
-  const [personas, setPersonas] = useState(REWARDS_PERSONAS);
+  const [personas, setPersonas] = useAppDoc("rewards", REWARDS_PERSONAS);
   const [showAddForm, setShowAddForm] = useState(false);
   const [addNombre, setAddNombre] = useState("");
   const [addLocal, setAddLocal] = useState("");

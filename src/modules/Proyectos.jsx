@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { B } from "../design/tokens.js";
 import { PROYECTOS_INIT } from "../data/mockData.js";
+import { useAppDoc } from "../hooks/useAppDoc.js";
 import ModuleHeader from "../components/ModuleHeader.jsx";
 
 const goldLight = "#CAA150";
@@ -16,7 +17,7 @@ const BLANK_FORM = { nombre: "", owner: "", area: "", prioridad: "media", fecha:
 export default function Proyectos({ user, onBack }) {
   const isCM = user?.perfil === "casa_matriz";
 
-  const [proyectos, setProyectos] = useState(PROYECTOS_INIT);
+  const [proyectos, setProyectos] = useAppDoc("proyectos", PROYECTOS_INIT);
   const [selected, setSelected]   = useState(null);
   const [editMode, setEditMode]   = useState(false);
   const [drafts, setDrafts]       = useState({});   // { id: { nombre, fecha, prioridad } }

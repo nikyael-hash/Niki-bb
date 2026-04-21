@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { B, PERFILES } from "../design/tokens.js";
 import { IDEAS_INIT } from "../data/mockData.js";
+import { useAppDoc } from "../hooks/useAppDoc.js";
 import ModuleHeader from "../components/ModuleHeader.jsx";
 import Bubble from "../components/Bubble.jsx";
 import Destello from "../components/Destello.jsx";
@@ -21,7 +22,7 @@ const ESTADOS = {
 };
 
 export default function NikiLab({ user, onBack }) {
-  const [ideas, setIdeas] = useState(IDEAS_INIT);
+  const [ideas, setIdeas] = useAppDoc("lab", IDEAS_INIT);
   const [catFilter, setCatFilter] = useState("all");
   const [expandedId, setExpandedId] = useState(null);
   const [showForm, setShowForm] = useState(false);

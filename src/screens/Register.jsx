@@ -1,7 +1,20 @@
 import { useState } from "react";
 import { B, PERFILES, CODIGOS, EMOJI_GRUPOS } from "../design/tokens.js";
+import { auth, db, IS_CONFIGURED } from "../firebase.js";
 import Destello from "../components/Destello.jsx";
 import PatternBg from "../components/PatternBg.jsx";
+
+let _createUser, _ffDoc, _ffSetDoc;
+async function loadAuth() {
+  if (_createUser) return true;
+  if (!auth) return false;
+  const fa = await import("firebase/auth");
+  const ff = await import("firebase/firestore");
+  _createUser = fa.createUserWithEmailAndPassword;
+  _ffDoc      = ff.doc;
+  _ffSetDoc   = ff.setDoc;
+  return true;
+}
 
 export default function Register({ onBack, onRegistered }) {
   const [step, setStep] = useState(1);
@@ -15,6 +28,7 @@ export default function Register({ onBack, onRegistered }) {
   const [errForm, setErrForm] = useState("");
   const [emoji, setEmoji] = useState("");
   const [grupoEmoji, setGrupoEmoji] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   const verificarCodigo = () => {
     setErrCodigo("");
@@ -26,29 +40,48 @@ export default function Register({ onBack, onRegistered }) {
 
   const verificarForm = () => {
     setErrForm("");
-    if (!nombre.trim()) { setErrForm("Ingresá tu nombre completo."); return; }
-    if (!email.includes("@")) { setErrForm("Email inválido."); return; }
-    if (pass.length < 6) { setErrForm("La contraseña debe tener al menos 6 caracteres."); return; }
-    if (pass !== pass2) { setErrForm("Las contraseñas no coinciden."); return; }
+    if (!nombre.trim())         { setErrForm("Ingresá tu nombre completo."); return; }
+    if (!email.includes("@"))   { setErrForm("Email inválido."); return; }
+    if (pass.length < 6)        { setErrForm("La contraseña debe tener al menos 6 caracteres."); return; }
+    if (pass !== pass2)         { setErrForm("Las contraseñas no coinciden."); return; }
     setStep(3);
   };
 
-  const finalizar = () => {
+  const finalizar = async () => {
     if (!emoji) return;
-    const newUser = {
-      id: `u_${Date.now()}`,
-      nombre: nombre.trim(),
-      email: email.trim().toLowerCase(),
-      pass,
-      perfil: codigoData.perfil,
-      local: codigoData.local,
+    setLoading(true);
+
+    const profile = {
+      nombre:  nombre.trim(),
+      email:   email.trim().toLowerCase(),
+      perfil:  codigoData.perfil,
+      local:   codigoData.local,
       emoji,
     };
-    onRegistered(newUser);
+
+    try {
+      if (IS_CONFIGURED && await loadAuth()) {
+        const cred = await _createUser(auth, profile.email, pass);
+        await _ffSetDoc(_ffDoc(db, "users", cred.user.uid), profile);
+        onRegistered({ id: cred.user.uid, ...profile });
+      } else {
+        // Mock fallback
+        onRegistered({ id: `u_${Date.now()}`, pass, ...profile });
+      }
+    } catch (e) {
+      const msg = e.code === "auth/email-already-in-use"
+        ? "Ese email ya tiene una cuenta. Usá el login."
+        : e.code === "auth/invalid-email"
+        ? "Email inválido."
+        : "Error al registrarte. Intentá de nuevo.";
+      setErrForm(msg);
+      setStep(2);
+    }
+    setLoading(false);
   };
 
   const perfil = codigoData ? PERFILES[codigoData.perfil] : PERFILES.manicura;
-  const color = perfil.color;
+  const color  = perfil.color;
 
   return (
     <div style={{
@@ -59,7 +92,6 @@ export default function Register({ onBack, onRegistered }) {
     }}>
       <PatternBg opacity={0.04} id="reg-bg" />
 
-      {/* Header */}
       <div style={{ position: "relative", padding: "20px 20px 0", display: "flex", alignItems: "center", gap: 12 }}>
         <button onClick={onBack} style={{ background: B.coolGray, border: `1px solid ${B.glacier}`, borderRadius: 8, padding: "6px 13px", fontSize: 10, color: B.mid, fontWeight: 700 }}>
           ← Volver
@@ -70,7 +102,6 @@ export default function Register({ onBack, onRegistered }) {
         </div>
       </div>
 
-      {/* Progress bar */}
       <div style={{ position: "relative", padding: "12px 20px 0" }}>
         <div style={{ height: 3, background: B.coolGray, borderRadius: 2, overflow: "hidden" }}>
           <div style={{ width: `${(step / 3) * 100}%`, height: "100%", background: `linear-gradient(90deg, ${color}80, ${color})`, borderRadius: 2, transition: "width 0.4s ease" }} />
@@ -79,7 +110,6 @@ export default function Register({ onBack, onRegistered }) {
 
       <div style={{ position: "relative", padding: "24px 20px 40px", flex: 1 }}>
 
-        {/* PASO 1 — Código */}
         {step === 1 && (
           <div style={{ animation: "fadeUp 0.3s ease" }}>
             <div style={{ textAlign: "center", marginBottom: 28 }}>
@@ -108,12 +138,11 @@ export default function Register({ onBack, onRegistered }) {
               Verificar código
             </button>
             <div style={{ marginTop: 16, padding: 12, background: B.goldPale, borderRadius: 10, fontSize: 9, color: B.mid, textAlign: "center" }}>
-              Códigos demo: NIKI-CM-2026 · NIKI-MAN-2026 · NIKI-ENC-2026 · NIKI-FRQ-2026 · NIKI-INV-2026
+              Códigos: NIKI-CM-2026 · NIKI-MAN-2026 · NIKI-ENC-2026 · NIKI-FRQ-2026 · NIKI-INV-2026
             </div>
           </div>
         )}
 
-        {/* PASO 2 — Datos */}
         {step === 2 && codigoData && (
           <div style={{ animation: "fadeUp 0.3s ease" }}>
             <div style={{ textAlign: "center", marginBottom: 24 }}>
@@ -132,9 +161,9 @@ export default function Register({ onBack, onRegistered }) {
             </div>
             {[
               { val: nombre, set: setNombre, placeholder: "Nombre completo", type: "text" },
-              { val: email, set: setEmail, placeholder: "Email", type: "email" },
-              { val: pass, set: setPass, placeholder: "Contraseña (mín. 6 caracteres)", type: "password" },
-              { val: pass2, set: setPass2, placeholder: "Repetir contraseña", type: "password" },
+              { val: email,  set: setEmail,  placeholder: "Email", type: "email" },
+              { val: pass,   set: setPass,   placeholder: "Contraseña (mín. 6 caracteres)", type: "password" },
+              { val: pass2,  set: setPass2,  placeholder: "Repetir contraseña", type: "password" },
             ].map((f, i) => (
               <input key={i} value={f.val} onChange={e => { f.set(e.target.value); setErrForm(""); }}
                 placeholder={f.placeholder} type={f.type}
@@ -148,7 +177,6 @@ export default function Register({ onBack, onRegistered }) {
           </div>
         )}
 
-        {/* PASO 3 — Emoji */}
         {step === 3 && (
           <div style={{ animation: "fadeUp 0.3s ease" }}>
             <div style={{ textAlign: "center", marginBottom: 20 }}>
@@ -159,7 +187,6 @@ export default function Register({ onBack, onRegistered }) {
               <div style={{ fontSize: 11, color: B.mid }}>Este emoji te va a representar en toda la app.</div>
             </div>
 
-            {/* Grupo tabs */}
             <div style={{ display: "flex", gap: 6, marginBottom: 14, overflowX: "auto", scrollbarWidth: "none" }}>
               {EMOJI_GRUPOS.map((g, i) => (
                 <button key={i} onClick={() => setGrupoEmoji(i)} style={{
@@ -173,7 +200,6 @@ export default function Register({ onBack, onRegistered }) {
               ))}
             </div>
 
-            {/* Emoji grid */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 8, marginBottom: 20 }}>
               {EMOJI_GRUPOS[grupoEmoji].items.map(em => (
                 <button key={em} onClick={() => setEmoji(em)} style={{
@@ -187,13 +213,13 @@ export default function Register({ onBack, onRegistered }) {
               ))}
             </div>
 
-            <button onClick={finalizar} disabled={!emoji} style={{
+            <button onClick={finalizar} disabled={!emoji || loading} style={{
               width: "100%", padding: 14, borderRadius: 12, fontSize: 13, fontWeight: 700,
               color: emoji ? B.white : B.mid,
               background: emoji ? `linear-gradient(135deg, ${color}, ${color}cc)` : B.coolGray,
               transition: "all 0.2s",
             }}>
-              {emoji ? "¡Listo! Entrar a NIKI OS ✨" : "Elegí un emoji para continuar"}
+              {loading ? "Creando cuenta..." : emoji ? "¡Listo! Entrar a NIKI OS ✨" : "Elegí un emoji para continuar"}
             </button>
           </div>
         )}

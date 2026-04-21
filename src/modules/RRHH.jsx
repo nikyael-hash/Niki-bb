@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { B } from "../design/tokens.js";
 import { MANICURAS_DATA } from "../data/mockData.js";
+import { useAppDoc } from "../hooks/useAppDoc.js";
 import ModuleHeader from "../components/ModuleHeader.jsx";
 
 const goldLight = "#CAA150";
@@ -13,7 +14,7 @@ const BLANK_FORM = { nombre: "", local: LOCALES_BASE[0], skill: 80, nivel: "Juni
 export default function RRHH({ user, onBack }) {
   const isCM = user?.perfil === "casa_matriz";
 
-  const [manicuras, setManicuras]     = useState(MANICURAS_DATA.map(m => ({ ...m })));
+  const [manicuras, setManicuras]     = useAppDoc("rrhh", MANICURAS_DATA);
   const [localFilter, setLocalFilter] = useState("all");
   const [nivelFilter, setNivelFilter] = useState("all");
   const [editMode, setEditMode]       = useState(false);

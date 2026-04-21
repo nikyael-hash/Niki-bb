@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { CSS_GLOBAL } from "./design/tokens.js";
 import { B } from "./design/tokens.js";
+import { auth, db, IS_CONFIGURED } from "./firebase.js";
 
 import Login from "./screens/Login.jsx";
 import Register from "./screens/Register.jsx";
@@ -37,13 +38,13 @@ const MODULE_COMPONENTS = {
 };
 
 const TABS = [
-  { id: "home",     icon: "◆",  label: "Inicio"   },
-  { id: "modulos",  icon: "⊞",  label: "Módulos"  },
-  { id: "blog",     icon: "✨", label: "Novedades" },
+  { id: "home",    icon: "◆",  label: "Inicio"    },
+  { id: "modulos", icon: "⊞",  label: "Módulos"   },
+  { id: "blog",    icon: "✨", label: "Novedades" },
 ];
 
 export default function App() {
-  const [screen, setScreen] = useState("login");
+  const [screen, setScreen] = useState("loading");
   const [user, setUser] = useState(null);
   const [tab, setTab] = useState("home");
   const [activeModule, setActiveModule] = useState(null);
@@ -55,13 +56,46 @@ export default function App() {
     return () => document.head.removeChild(style);
   }, []);
 
+  // Firebase auth state listener — auto-login on refresh
+  useEffect(() => {
+    if (!IS_CONFIGURED || !auth) {
+      setScreen("login");
+      return;
+    }
+    let unsubscribe = () => {};
+    import("firebase/auth").then(({ onAuthStateChanged }) => {
+      import("firebase/firestore").then(({ doc, getDoc }) => {
+        unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+          if (fbUser) {
+            try {
+              const snap = await getDoc(doc(db, "users", fbUser.uid));
+              if (snap.exists()) {
+                setUser({ id: fbUser.uid, ...snap.data() });
+                setScreen("app");
+                return;
+              }
+            } catch {}
+          }
+          setScreen("login");
+        });
+      });
+    });
+    return () => unsubscribe();
+  }, []);
+
   const handleLogin = (u) => {
     setUser(u);
     setScreen("app");
     setTab("home");
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (IS_CONFIGURED && auth) {
+      try {
+        const { signOut } = await import("firebase/auth");
+        await signOut(auth);
+      } catch {}
+    }
     setUser(null);
     setScreen("login");
     setActiveModule(null);
@@ -75,21 +109,23 @@ export default function App() {
 
   const closeModule = () => setActiveModule(null);
 
-  // Login / Register
-  if (screen === "login") {
-    return <Login onLogin={handleLogin} onGoRegister={() => setScreen("register")} />;
-  }
-  if (screen === "register") {
-    return <Register onBack={() => setScreen("login")} onRegistered={handleLogin} />;
+  if (screen === "loading") {
+    return (
+      <div style={{ minHeight: "100vh", background: B.pinkBg, display: "flex", alignItems: "center", justifyContent: "center", maxWidth: 430, margin: "0 auto" }}>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 48, fontWeight: 300, color: B.text, letterSpacing: 12, paddingLeft: 12 }}>NIKI</div>
+          <div style={{ fontSize: 8, letterSpacing: 3, color: B.mid, fontWeight: 700, marginTop: 4 }}>CARGANDO...</div>
+        </div>
+      </div>
+    );
   }
 
-  // Módulo activo
+  if (screen === "login")    return <Login onLogin={handleLogin} onGoRegister={() => setScreen("register")} />;
+  if (screen === "register") return <Register onBack={() => setScreen("login")} onRegistered={handleLogin} />;
+
   if (activeModule) {
     const ModComponent = MODULE_COMPONENTS[activeModule];
-    if (ModComponent) {
-      return <ModComponent user={user} onBack={closeModule} />;
-    }
-    // Módulos no implementados aún
+    if (ModComponent) return <ModComponent user={user} onBack={closeModule} />;
     return (
       <div style={{ minHeight: "100vh", background: B.coolGray, fontFamily: "'Lato',sans-serif", maxWidth: 430, margin: "0 auto" }}>
         <div style={{ background: B.white, padding: "13px 18px", borderBottom: `1px solid ${B.pinkLight}`, display: "flex", alignItems: "center", gap: 10 }}>
@@ -105,7 +141,6 @@ export default function App() {
     );
   }
 
-  // App principal con tabs
   const renderTab = () => {
     if (tab === "home")    return <Home user={user} onOpenModule={openModule} onLogout={handleLogout} />;
     if (tab === "modulos") return <ModulosGrid user={user} onOpenModule={openModule} onBack={() => setTab("home")} />;
@@ -118,8 +153,6 @@ export default function App() {
       <div style={{ paddingBottom: 60 }}>
         {renderTab()}
       </div>
-
-      {/* Bottom navigation */}
       <div style={{
         position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)",
         width: "100%", maxWidth: 430,
@@ -133,14 +166,9 @@ export default function App() {
           <button
             key={t.id}
             onClick={() => { setTab(t.id); setActiveModule(null); }}
-            style={{
-              flex: 1, display: "flex", flexDirection: "column",
-              alignItems: "center", gap: 3, background: "none", padding: "4px 0",
-            }}
+            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, background: "none", padding: "4px 0" }}
           >
-            <span style={{ fontSize: 16, color: tab === t.id ? B.pinkDeep : B.glacier, transition: "color 0.2s" }}>
-              {t.icon}
-            </span>
+            <span style={{ fontSize: 16, color: tab === t.id ? B.pinkDeep : B.glacier, transition: "color 0.2s" }}>{t.icon}</span>
             <span style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1, color: tab === t.id ? B.pinkDeep : B.mid, transition: "color 0.2s" }}>
               {t.label.toUpperCase()}
             </span>

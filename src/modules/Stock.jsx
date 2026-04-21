@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { B } from "../design/tokens.js";
 import { STOCK_INIT } from "../data/mockData.js";
+import { useAppDoc } from "../hooks/useAppDoc.js";
 import ModuleHeader from "../components/ModuleHeader.jsx";
 
 const ESTADO_CONFIG = {
@@ -14,7 +15,7 @@ const BLANK_FORM = { nombre: "", cantidad: 1, estado: "disponible" };
 export default function Stock({ user, onBack }) {
   const isCM = user?.perfil === "casa_matriz";
 
-  const [items, setItems]     = useState(STOCK_INIT.map(i => ({ ...i })));
+  const [items, setItems]     = useAppDoc("stock", STOCK_INIT);
   const [filter, setFilter]   = useState("all");
   const [editMode, setEditMode] = useState(false);
   const [drafts, setDrafts]   = useState({});   // { id: { cantidad, estado, obs } }

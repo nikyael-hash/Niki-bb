@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { B } from "../design/tokens.js";
 import { PLAN_CARRERA_INIT } from "../data/mockData.js";
+import { useAppDoc } from "../hooks/useAppDoc.js";
 import ModuleHeader from "../components/ModuleHeader.jsx";
 
 const ESCALA = [
@@ -22,7 +23,7 @@ const REUNION_INIT = {
 };
 
 export default function PlanCarrera({ user, onBack }) {
-  const [planes, setPlanes]       = useState(PLAN_CARRERA_INIT);
+  const [planes, setPlanes]       = useAppDoc("plan_carrera", PLAN_CARRERA_INIT);
   const [selected, setSelected]   = useState(null);
   const [editMode, setEditMode]   = useState(false);
   const [modalOpen, setModalOpen] = useState(false);

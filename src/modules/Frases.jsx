@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { B } from "../design/tokens.js";
 import { FRASES_INIT } from "../data/mockData.js";
+import { useAppDoc } from "../hooks/useAppDoc.js";
 import ModuleHeader from "../components/ModuleHeader.jsx";
 import Destello from "../components/Destello.jsx";
 
@@ -23,7 +24,7 @@ export default function Frases({ user, onBack }) {
   const [search, setSearch] = useState("");
   const [favoritas, setFavoritas] = useState([]);
   const [copied, setCopied] = useState(null);
-  const [frases, setFrases] = useState(FRASES_INIT);
+  const [frases, setFrases] = useAppDoc("frases", FRASES_INIT);
   const [editMode, setEditMode] = useState(false);
   const [editTextos, setEditTextos] = useState({});
   const [showNuevaFrase, setShowNuevaFrase] = useState(false);

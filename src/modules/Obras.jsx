@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { B } from "../design/tokens.js";
 import { OBRAS_INIT } from "../data/mockData.js";
+import { useAppDoc } from "../hooks/useAppDoc.js";
 import ModuleHeader from "../components/ModuleHeader.jsx";
 
 const ETAPAS = ["Búsqueda Local", "Firma Contrato", "Obra Civil", "En construcción", "Terminada"];
@@ -13,7 +14,7 @@ const ETAPA_COLOR = {
 };
 
 export default function Obras({ user, onBack }) {
-  const [obras, setObras] = useState(OBRAS_INIT);
+  const [obras, setObras] = useAppDoc("obras", OBRAS_INIT);
   const [selected, setSelected] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [showAddObra, setShowAddObra] = useState(false);

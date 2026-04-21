@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { B } from "../design/tokens.js";
 import { INVERSORES_INIT } from "../data/mockData.js";
+import { useAppDoc } from "../hooks/useAppDoc.js";
 import ModuleHeader from "../components/ModuleHeader.jsx";
 import Destello from "../components/Destello.jsx";
 
@@ -13,7 +14,7 @@ const ESTADO_CONFIG = {
 };
 
 export default function Inversores({ user, onBack }) {
-  const [inversores, setInversores] = useState(INVERSORES_INIT);
+  const [inversores, setInversores] = useAppDoc("inversores", INVERSORES_INIT);
   const [selected, setSelected] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [nuevoForm, setNuevoForm] = useState({ visible: false, nombre: "", local: "", porcentaje: "" });

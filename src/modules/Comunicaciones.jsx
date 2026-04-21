@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { B, PERFILES } from "../design/tokens.js";
 import { MSGS_INIT } from "../data/mockData.js";
+import { useAppDoc } from "../hooks/useAppDoc.js";
 import ModuleHeader from "../components/ModuleHeader.jsx";
 import Bubble from "../components/Bubble.jsx";
 
@@ -13,7 +14,7 @@ const CAT_CONFIG = {
 };
 
 export default function Comunicaciones({ user, onBack }) {
-  const [msgs, setMsgs] = useState(MSGS_INIT);
+  const [msgs, setMsgs] = useAppDoc("comunicaciones", MSGS_INIT);
   const [draft, setDraft] = useState("");
   const [cat, setCat] = useState("operaciones");
   const [editMode, setEditMode] = useState(false);
