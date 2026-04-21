@@ -54,7 +54,7 @@ export const BLOG_POSTS = [
   { id:2, titulo:"Niki Lab ya está activo 🧪", sub:"Proponé ideas, votá y participá",     fecha:"21 ABR 2026", color:B.green,       emoji:"🧪", tag:"NUEVO MÓDULO",    link:null, cta:"IR AL LAB",   countdown:false },
   { id:3, titulo:"NIKI OS v1.0 lanzado ✨",    sub:"Toda la red conectada",               fecha:"21 ABR 2026", color:"#CAA150",     emoji:"◆",  tag:"LANZAMIENTO",     link:null, cta:"EXPLORAR",    countdown:false },
   { id:4, titulo:"Junior → Senior → Master", sub:"Sistema de niveles desde Junio 2026",  fecha:"JUN 2026",    color:B.teal,        emoji:"⭐", tag:"PRÓXIMAMENTE",    link:null, cta:"VER SKILL",   countdown:false },
-  { id:5, titulo:"5 Obras en marcha ✨",      sub:"Miami, Recoleta II, Ramos Mejía...",   fecha:"ABR 2026",    color:B.teal,        emoji:"🏗️", tag:"EXPANSIÓN",        link:null, cta:"VER OBRAS",   countdown:false },
+  { id:5, titulo:"3 Obras en marcha ✨",      sub:"Ramos Mejía, Caballito, San Isidro",  fecha:"ABR 2026",    color:B.teal,        emoji:"🏗️", tag:"EXPANSIÓN",        link:null, cta:"VER OBRAS",   countdown:false },
 ];
 
 export const AUDITORIAS_INIT = [
@@ -88,36 +88,15 @@ export const AUDITORIAS_INIT = [
 
 export const OBRAS_INIT = [
   {
-    id:"o1", nombre:"Miami — Flagship USA", etapa:"Obra Civil", flag:"🇺🇸",
-    items:[
-      { id:"oi1", nombre:"Mesas de manicura ×4",       origen:"comprar",   fecha:"May 2026", obs:"Proveedor: Silla Store Miami", listo:false },
-      { id:"oi2", nombre:"Sillas pana ×16",             origen:"deposito",  fecha:"May 2026", obs:"8 disponibles en depósito",    listo:false },
-      { id:"oi3", nombre:"Tornos ×8",                   origen:"deposito",  fecha:"May 2026", obs:"6 disponibles en depósito",    listo:false },
-      { id:"oi4", nombre:"Cabinas LED ×8",              origen:"comprar",   fecha:"May 2026", obs:"",                             listo:false },
-      { id:"oi5", nombre:"Pintura y revestimientos",    origen:"comprar",   fecha:"Abr 2026", obs:"Paleta definida",             listo:true  },
-      { id:"oi6", nombre:"Cafetera",                    origen:"comprar",   fecha:"May 2026", obs:"",                             listo:false },
-    ],
-  },
-  {
-    id:"o2", nombre:"Recoleta II", etapa:"Búsqueda Local", flag:"🔍",
-    items:[
-      { id:"oi7", nombre:"Mesas de manicura ×4",  origen:"deposito", fecha:"Jun 2026", obs:"4 disponibles en depósito", listo:false },
-      { id:"oi8", nombre:"Sillas pana ×16",        origen:"comprar",  fecha:"Jun 2026", obs:"",                          listo:false },
-    ],
-  },
-  {
-    id:"o3", nombre:"Ramos Mejía", etapa:"Firma Contrato", flag:"📄",
-    items:[
-      { id:"oi9",  nombre:"Mesas de manicura ×4",  origen:"comprar", fecha:"Jul 2026", obs:"", listo:false },
-      { id:"oi10", nombre:"Tornos ×8",              origen:"comprar", fecha:"Jul 2026", obs:"", listo:false },
-    ],
-  },
-  {
-    id:"o4", nombre:"San Isidro", etapa:"Firma Contrato", flag:"📄",
+    id:"o1", nombre:"Ramos Mejía", etapa:"Búsqueda Local", flag:"🔍",
     items:[],
   },
   {
-    id:"o5", nombre:"Caballito", etapa:"Búsqueda Local", flag:"🔍",
+    id:"o2", nombre:"Caballito", etapa:"Búsqueda Local", flag:"🔍",
+    items:[],
+  },
+  {
+    id:"o3", nombre:"San Isidro", etapa:"Búsqueda Local", flag:"🔍",
     items:[],
   },
 ];

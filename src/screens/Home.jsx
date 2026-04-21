@@ -8,7 +8,7 @@ const TICKER_ITEMS = [
   { text: "EVENTO 17 DE MAYO", icon: "✨", color: B.pink },
   { text: "NIKI OS v1.0", icon: "◆", color: "#CAA150" },
   { text: "NIKI LAB ACTIVO", icon: "🧪", color: B.green },
-  { text: "5 OBRAS EN MARCHA", icon: "◆", color: "#CAA150" },
+  { text: "3 OBRAS EN MARCHA", icon: "◆", color: "#CAA150" },
   { text: "JUNIOR → MASTER", icon: "✨", color: B.pink },
   { text: "MIAMI EN CONSTRUCCIÓN", icon: "◆", color: "#CAA150" },
 ];
@@ -112,7 +112,7 @@ export default function Home({ user, onOpenModule, onLogout }) {
           <div style={{ position: "relative", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
             {[
               { label: "Locales", value: "14", icon: "📍" },
-              { label: "Obras", value: "5", icon: "🏗️" },
+              { label: "Obras", value: "3", icon: "🏗️" },
               { label: "Ideas", value: "4", icon: "💡" },
               { label: "Inversores", value: "3", icon: "💰" },
             ].map((s, i) => (
