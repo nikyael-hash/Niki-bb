@@ -1,6 +1,6 @@
 import { B } from '../design/tokens.js';
 
-export default function ModuleHeader({ emoji, title, subtitle, onBack }) {
+export default function ModuleHeader({ emoji, title, subtitle, onBack, editMode, onToggleEdit, isCM }) {
   return (
     <div style={{
       background: B.white, padding: "13px 18px",
@@ -23,6 +23,20 @@ export default function ModuleHeader({ emoji, title, subtitle, onBack }) {
         <div style={{ fontSize: 13, fontWeight: 700, color: B.text }}>{emoji} {title}</div>
         {subtitle && <div style={{ fontSize: 8, color: B.mid }}>{subtitle}</div>}
       </div>
+      {isCM && onToggleEdit && (
+        <button
+          onClick={onToggleEdit}
+          style={{
+            padding: "6px 12px", borderRadius: 8, fontSize: 10, fontWeight: 700,
+            background: editMode ? B.pinkDeep : B.coolGray,
+            color: editMode ? B.white : B.mid,
+            border: `1px solid ${editMode ? B.pinkDeep : B.glacier}`,
+            transition: "all 0.2s",
+          }}
+        >
+          {editMode ? "✓ Listo" : "✏️ Editar"}
+        </button>
+      )}
     </div>
   );
 }

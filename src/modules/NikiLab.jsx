@@ -29,6 +29,8 @@ export default function NikiLab({ user, onBack }) {
   const [newDesc, setNewDesc] = useState("");
   const [newCat, setNewCat] = useState("colores");
   const [commentDraft, setCommentDraft] = useState({});
+  const [editMode, setEditMode] = useState(false);
+  const [editingTitulos, setEditingTitulos] = useState({});
   const isCM = user.perfil === "casa_matriz";
 
   const filtradas = ideas
@@ -60,6 +62,27 @@ export default function NikiLab({ user, onBack }) {
     setIdeas(prev => prev.map(i => i.id !== ideaId ? i : { ...i, estado }));
   };
 
+  const borrarIdea = (ideaId) => {
+    setIdeas(prev => prev.filter(i => i.id !== ideaId));
+    if (expandedId === ideaId) setExpandedId(null);
+  };
+
+  const startEditTitulo = (ideaId, tituloActual) => {
+    setEditingTitulos(prev => ({ ...prev, [ideaId]: tituloActual }));
+  };
+
+  const commitEditTitulo = (ideaId) => {
+    const nuevo = editingTitulos[ideaId]?.trim();
+    if (nuevo) {
+      setIdeas(prev => prev.map(i => i.id !== ideaId ? i : { ...i, titulo: nuevo }));
+    }
+    setEditingTitulos(prev => {
+      const next = { ...prev };
+      delete next[ideaId];
+      return next;
+    });
+  };
+
   const publicarIdea = () => {
     if (!newTitulo.trim()) return;
     setIdeas(prev => [{
@@ -74,7 +97,15 @@ export default function NikiLab({ user, onBack }) {
 
   return (
     <div style={{ minHeight: "100vh", background: B.coolGray, fontFamily: "'Lato', sans-serif", maxWidth: 430, margin: "0 auto" }}>
-      <ModuleHeader emoji="🧪" title="Niki Lab" subtitle="Ideas del equipo" onBack={onBack} />
+      <ModuleHeader
+        emoji="🧪"
+        title="Niki Lab"
+        subtitle="Ideas del equipo"
+        onBack={onBack}
+        isCM={isCM}
+        editMode={editMode}
+        onToggleEdit={() => setEditMode(e => !e)}
+      />
 
       <div style={{ padding: "12px 14px 80px" }}>
         {/* Filtros de categoría */}
@@ -104,11 +135,13 @@ export default function NikiLab({ user, onBack }) {
           const totalVotos = Object.values(idea.votos).reduce((s, v) => s + v, 0);
           const yaVote = idea.votos[user.perfil] === 1;
           const isExpanded = expandedId === idea.id;
+          const isEditingTitulo = isCM && editMode && idea.id in editingTitulos;
 
           return (
             <div key={idea.id} style={{
               background: B.white, borderRadius: 13, marginBottom: 10,
-              border: `1px solid ${B.pinkLight}`, overflow: "hidden",
+              border: `1px solid ${editMode && isCM ? B.pinkLight : B.pinkLight}`,
+              overflow: "hidden",
               animation: `fadeUp .2s ease ${idx * .04}s both`,
             }}>
               {/* Header de idea */}
@@ -124,9 +157,48 @@ export default function NikiLab({ user, onBack }) {
                         {estado.icon} {estado.label}
                       </span>
                     </div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: B.text, marginBottom: 3 }}>{idea.titulo}</div>
+
+                    {/* Título: editable inline en editMode para CM */}
+                    {isEditingTitulo ? (
+                      <input
+                        autoFocus
+                        value={editingTitulos[idea.id]}
+                        onChange={e => setEditingTitulos(prev => ({ ...prev, [idea.id]: e.target.value }))}
+                        onBlur={() => commitEditTitulo(idea.id)}
+                        onKeyDown={e => { if (e.key === "Enter") commitEditTitulo(idea.id); }}
+                        style={{
+                          width: "100%", padding: "4px 8px", marginBottom: 3,
+                          border: `1.5px solid ${B.pinkLight}`, borderRadius: 8,
+                          fontSize: 12, fontWeight: 700, color: B.text,
+                          background: B.pinkBg,
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{ fontSize: 12, fontWeight: 700, color: B.text, marginBottom: 3, cursor: editMode && isCM ? "text" : "default" }}
+                        onClick={() => { if (editMode && isCM) startEditTitulo(idea.id, idea.titulo); }}
+                      >
+                        {idea.titulo}
+                        {editMode && isCM && (
+                          <span style={{ fontSize: 9, color: B.mid, marginLeft: 5, fontWeight: 400 }}>✏️</span>
+                        )}
+                      </div>
+                    )}
+
                     <div style={{ fontSize: 9, color: B.mid }}>{idea.nombre} · {idea.fecha}</div>
                   </div>
+
+                  {/* Botón borrar — solo en editMode CM */}
+                  {editMode && isCM && (
+                    <button
+                      onClick={() => borrarIdea(idea.id)}
+                      style={{
+                        padding: "5px 9px", borderRadius: 8, fontSize: 13, flexShrink: 0,
+                        background: B.redPale, color: B.red,
+                        border: `1px solid ${B.red}30`,
+                      }}
+                    >🗑️</button>
+                  )}
                 </div>
 
                 {/* Acciones */}
@@ -148,6 +220,7 @@ export default function NikiLab({ user, onBack }) {
                   }}>
                     💬 {idea.comentarios.length} {isExpanded ? "▲" : "▼"}
                   </button>
+                  {/* Selector de estado: siempre visible para CM */}
                   {isCM && (
                     <select
                       value={idea.estado}

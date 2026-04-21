@@ -14,6 +14,7 @@ export default function Auditorias({ user, onBack }) {
   const [auditorias, setAuditorias] = useState(AUDITORIAS_INIT);
   const [expanded, setExpanded] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState({ local: LOCALES[0], tipo: "cm", fecha: "", ejes: EJES.map(n => ({ nombre: n, score: 8, obs: "" })), conclusiones: "", mejoras: [""] });
   const isCM = user.perfil === "casa_matriz";
 
@@ -30,9 +31,26 @@ export default function Auditorias({ user, onBack }) {
     setShowForm(false);
   };
 
+  const borrarAuditoria = (id) => {
+    setAuditorias(prev => prev.filter(a => a.id !== id));
+    if (expanded === id) setExpanded(null);
+  };
+
+  const toggleEditMode = () => {
+    setEditMode(m => !m);
+  };
+
   return (
     <div style={{ minHeight: "100vh", background: B.coolGray, fontFamily: "'Lato', sans-serif", maxWidth: 430, margin: "0 auto" }}>
-      <ModuleHeader emoji="📋" title="Auditorías" subtitle="Control de calidad de locales" onBack={onBack} />
+      <ModuleHeader
+        emoji="📋"
+        title="Auditorías"
+        subtitle="Control de calidad de locales"
+        onBack={onBack}
+        isCM={isCM}
+        editMode={editMode}
+        onToggleEdit={toggleEditMode}
+      />
 
       <div style={{ padding: "12px 14px 80px" }}>
         {auditorias.map((a, i) => {
@@ -44,39 +62,81 @@ export default function Auditorias({ user, onBack }) {
           return (
             <div key={a.id} style={{
               background: B.white, borderRadius: 14, marginBottom: 10,
-              border: `1px solid ${B.pinkLight}`, overflow: "hidden",
+              border: `1px solid ${editMode ? `${B.red}30` : B.pinkLight}`,
+              overflow: "hidden",
               animation: `fadeUp .2s ease ${i * .05}s both`,
+              transition: "border-color 0.2s",
             }}>
-              <button onClick={() => setExpanded(isExpanded ? null : a.id)} style={{
-                width: "100%", padding: "14px 14px 12px", display: "flex",
-                alignItems: "center", gap: 12, background: "transparent",
-              }}>
-                <div style={{
-                  width: 48, height: 48, borderRadius: 12, flexShrink: 0,
-                  background: scoreBg(parseFloat(prom)), border: `1.5px solid ${col}40`,
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+              {/* Row principal: expand + boton borrar en editMode */}
+              <div style={{ display: "flex", alignItems: "stretch" }}>
+                <button onClick={() => setExpanded(isExpanded ? null : a.id)} style={{
+                  flex: 1, padding: "14px 14px 12px", display: "flex",
+                  alignItems: "center", gap: 12, background: "transparent",
                 }}>
-                  <div style={{ fontFamily: "Georgia,serif", fontSize: 18, color: col, lineHeight: 1 }}>{prom}</div>
-                  <div style={{ fontSize: 6, color: col, fontWeight: 700 }}>/ 10</div>
-                </div>
-                <div style={{ flex: 1, textAlign: "left" }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: B.text, marginBottom: 3 }}>{a.local}</div>
-                  <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-                    <span style={{
-                      padding: "2px 7px", borderRadius: 10, fontSize: 7, fontWeight: 700,
-                      background: isMisterioso ? B.purplePale : B.goldPale,
-                      color: isMisterioso ? B.purple : "#CAA150",
-                    }}>
-                      {isMisterioso ? "🕵️ Misterioso Shopper" : "✦ Casa Matriz"}
-                    </span>
-                    <span style={{ fontSize: 7, color: B.mid }}>{a.fecha}</span>
+                  <div style={{
+                    width: 48, height: 48, borderRadius: 12, flexShrink: 0,
+                    background: scoreBg(parseFloat(prom)), border: `1.5px solid ${col}40`,
+                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                  }}>
+                    <div style={{ fontFamily: "Georgia,serif", fontSize: 18, color: col, lineHeight: 1 }}>{prom}</div>
+                    <div style={{ fontSize: 6, color: col, fontWeight: 700 }}>/ 10</div>
                   </div>
-                </div>
-                <span style={{ fontSize: 10, color: B.mid }}>{isExpanded ? "▲" : "▼"}</span>
-              </button>
+                  <div style={{ flex: 1, textAlign: "left" }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: B.text, marginBottom: 3 }}>{a.local}</div>
+                    <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                      <span style={{
+                        padding: "2px 7px", borderRadius: 10, fontSize: 7, fontWeight: 700,
+                        background: isMisterioso ? B.purplePale : B.goldPale,
+                        color: isMisterioso ? B.purple : "#CAA150",
+                      }}>
+                        {isMisterioso ? "🕵️ Misterioso Shopper" : "✦ Casa Matriz"}
+                      </span>
+                      <span style={{ fontSize: 7, color: B.mid }}>{a.fecha}</span>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 10, color: B.mid }}>{isExpanded ? "▲" : "▼"}</span>
+                </button>
+
+                {editMode && (
+                  <button
+                    onClick={() => borrarAuditoria(a.id)}
+                    title="Borrar auditoría"
+                    style={{
+                      padding: "0 14px",
+                      background: B.redPale,
+                      border: "none",
+                      borderLeft: `1px solid ${B.red}20`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 16, cursor: "pointer",
+                      flexShrink: 0,
+                      transition: "background 0.15s",
+                    }}
+                  >
+                    🗑️
+                  </button>
+                )}
+              </div>
 
               {isExpanded && (
                 <div style={{ borderTop: `1px solid ${B.coolGray}`, padding: "12px 14px" }}>
+                  {/* Botón borrar también dentro del card expandido */}
+                  {editMode && (
+                    <div style={{ marginBottom: 12 }}>
+                      <button
+                        onClick={() => borrarAuditoria(a.id)}
+                        style={{
+                          width: "100%", padding: "9px 14px", borderRadius: 10,
+                          background: B.redPale, color: B.red,
+                          border: `1px solid ${B.red}30`,
+                          fontSize: 11, fontWeight: 700,
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                        }}
+                      >
+                        🗑️ Eliminar esta auditoría
+                      </button>
+                    </div>
+                  )}
+
                   <div style={{ fontSize: 8, letterSpacing: 2, color: B.mid, fontWeight: 700, marginBottom: 10 }}>EJES DE EVALUACIÓN</div>
                   {a.ejes.map((eje, ei) => (
                     <div key={ei} style={{ marginBottom: 10 }}>
@@ -114,10 +174,16 @@ export default function Auditorias({ user, onBack }) {
             </div>
           );
         })}
+
+        {auditorias.length === 0 && (
+          <div style={{ textAlign: "center", padding: "40px 20px", color: B.mid, fontSize: 12 }}>
+            No hay auditorías registradas
+          </div>
+        )}
       </div>
 
       {/* FAB nueva auditoría (solo CM) */}
-      {isCM && (
+      {isCM && !editMode && (
         <div style={{ position: "fixed", bottom: 20, right: "calc(50% - 210px)", zIndex: 50 }}>
           <button onClick={() => setShowForm(true)} style={{
             padding: "12px 18px", borderRadius: 24, fontSize: 11, fontWeight: 700,

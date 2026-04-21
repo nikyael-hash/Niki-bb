@@ -16,10 +16,14 @@ export default function Comunicaciones({ user, onBack }) {
   const [msgs, setMsgs] = useState(MSGS_INIT);
   const [draft, setDraft] = useState("");
   const [cat, setCat] = useState("operaciones");
+  const [editMode, setEditMode] = useState(false);
   const isCM = user.perfil === "casa_matriz";
 
   const reaccionar = (id, tipo) =>
     setMsgs(p => p.map(m => m.id !== id ? m : { ...m, reacciones: { ...m.reacciones, [tipo]: (m.reacciones[tipo] || 0) + 1 } }));
+
+  const deleteMsg = (id) => setMsgs(p => p.filter(m => m.id !== id));
+  const togglePin = (id) => setMsgs(p => p.map(m => m.id !== id ? m : { ...m, fijado: !m.fijado }));
 
   const publicar = () => {
     if (!draft.trim()) return;
@@ -36,7 +40,8 @@ export default function Comunicaciones({ user, onBack }) {
 
   return (
     <div style={{ minHeight: "100vh", background: B.coolGray, fontFamily: "'Lato', sans-serif", maxWidth: 430, margin: "0 auto" }}>
-      <ModuleHeader emoji="💬" title="Comunicaciones" subtitle="Canal interno Niki BB" onBack={onBack} />
+      <ModuleHeader emoji="💬" title="Comunicaciones" subtitle="Canal interno Niki BB" onBack={onBack}
+        isCM={isCM} editMode={editMode} onToggleEdit={() => setEditMode(!editMode)} />
 
       <div style={{ padding: "12px 14px 140px" }}>
         {fijados.length > 0 && (
@@ -64,8 +69,8 @@ export default function Comunicaciones({ user, onBack }) {
                 </div>
               </div>
               <div style={{ fontSize: 12, color: B.text, lineHeight: 1.6, marginBottom: 8 }}>{m.texto}</div>
-              <div style={{ display: "flex", gap: 7 }}>
-                {[["like", "👍", m.reacciones.like], ["love", "💖", m.reacciones.love], ["star", "⭐", m.reacciones.star]].map(([tipo, ic, cnt]) => (
+              <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
+                {!editMode && [["like", "👍", m.reacciones.like], ["love", "💖", m.reacciones.love], ["star", "⭐", m.reacciones.star]].map(([tipo, ic, cnt]) => (
                   <button key={tipo} onClick={() => reaccionar(m.id, tipo)} style={{
                     display: "flex", alignItems: "center", gap: 3,
                     padding: "3px 9px", background: B.coolGray, border: `1px solid ${B.glacier}`,
@@ -74,6 +79,24 @@ export default function Comunicaciones({ user, onBack }) {
                     {ic} {cnt || ""}
                   </button>
                 ))}
+                {editMode && isCM && (
+                  <>
+                    <button onClick={() => togglePin(m.id)} style={{
+                      padding: "3px 10px", borderRadius: 20, fontSize: 9, fontWeight: 700,
+                      background: m.fijado ? B.goldPale : B.coolGray,
+                      color: m.fijado ? "#CAA150" : B.mid,
+                      border: `1px solid ${m.fijado ? "#CAA150" : B.glacier}`,
+                    }}>
+                      {m.fijado ? "📌 Desfij." : "📌 Fijar"}
+                    </button>
+                    <button onClick={() => deleteMsg(m.id)} style={{
+                      padding: "3px 10px", borderRadius: 20, fontSize: 9, fontWeight: 700,
+                      background: B.redPale, color: B.red, border: `1px solid ${B.red}30`,
+                    }}>
+                      🗑️ Borrar
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           );

@@ -15,6 +15,9 @@ const ESTADO_CONFIG = {
 export default function Inversores({ user, onBack }) {
   const [inversores, setInversores] = useState(INVERSORES_INIT);
   const [selected, setSelected] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [nuevoForm, setNuevoForm] = useState({ visible: false, nombre: "", local: "", porcentaje: "" });
+
   const isCM = user.perfil === "casa_matriz";
 
   const inv = inversores.find(i => i.id === selected);
@@ -33,8 +36,31 @@ export default function Inversores({ user, onBack }) {
     }));
   };
 
+  const borrarInversor = (id, e) => {
+    e.stopPropagation();
+    setInversores(prev => prev.filter(i => i.id !== id));
+  };
+
+  const actualizarCampo = (id, campo, valor) => {
+    setInversores(prev => prev.map(i => i.id !== id ? i : { ...i, [campo]: valor }));
+  };
+
+  const agregarInversor = () => {
+    if (!nuevoForm.nombre.trim()) return;
+    const newId = Date.now();
+    setInversores(prev => [...prev, {
+      id: newId,
+      nombre: nuevoForm.nombre.trim(),
+      local: nuevoForm.local.trim() || "—",
+      porcentaje: Number(nuevoForm.porcentaje) || 0,
+      informes: [],
+      proximo_retiro: { monto_estimado: 0, fecha: "—", metodo: "transferencia" },
+    }]);
+    setNuevoForm({ visible: false, nombre: "", local: "", porcentaje: "" });
+  };
+
+  // ── Vista detalle ──────────────────────────────────────────────────────────
   if (selected && inv) {
-    const lastInforme = inv.informes[0];
     return (
       <div style={{ minHeight: "100vh", background: B.coolGray, fontFamily: "'Lato', sans-serif", maxWidth: 430, margin: "0 auto" }}>
         <div style={{
@@ -139,9 +165,21 @@ export default function Inversores({ user, onBack }) {
     );
   }
 
+  // ── Vista lista ────────────────────────────────────────────────────────────
   return (
     <div style={{ minHeight: "100vh", background: B.coolGray, fontFamily: "'Lato', sans-serif", maxWidth: 430, margin: "0 auto" }}>
-      <ModuleHeader emoji="💰" title="Inversores" subtitle="Informes y dividendos" onBack={onBack} />
+      <ModuleHeader
+        emoji="💰"
+        title="Inversores"
+        subtitle="Informes y dividendos"
+        onBack={onBack}
+        isCM={isCM}
+        editMode={editMode}
+        onToggleEdit={() => {
+          setEditMode(v => !v);
+          setNuevoForm({ visible: false, nombre: "", local: "", porcentaje: "" });
+        }}
+      />
 
       <div style={{ padding: "14px 14px 60px" }}>
         {pendienteTotal > 0 && (
@@ -158,45 +196,182 @@ export default function Inversores({ user, onBack }) {
           const last = inv.informes[0];
           const estadoConf = last ? ESTADO_CONFIG[last.estado_dividendo] : null;
           return (
-            <button key={inv.id} onClick={() => setSelected(inv.id)} className="card" style={{
-              width: "100%", background: B.white, borderRadius: 14, marginBottom: 10,
-              border: `1px solid ${B.pinkLight}`, padding: "16px 14px", textAlign: "left",
+            <div key={inv.id} style={{
+              background: B.white, borderRadius: 14, marginBottom: 10,
+              border: `1px solid ${editMode ? B.redPale : B.pinkLight}`,
               animation: `fadeUp .2s ease ${i * .05}s both`,
               boxShadow: "0 2px 8px rgba(221,164,174,0.06)",
               position: "relative", overflow: "hidden",
             }}>
+              {/* barra superior */}
               <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${B.englishGreen}50, ${B.englishGreen})` }} />
-              <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 10 }}>
+
+              <div style={{ padding: "16px 14px", display: "flex", gap: 10, alignItems: "center" }}>
+                {/* icono */}
                 <div style={{
                   width: 44, height: 44, borderRadius: "50%", flexShrink: 0,
                   background: `${B.englishGreen}15`, border: `2px solid ${B.englishGreen}40`,
                   display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20,
                 }}>💰</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: B.text, marginBottom: 2 }}>{inv.nombre}</div>
-                  <div style={{ fontSize: 9, color: B.mid }}>{inv.local} · {inv.porcentaje}%</div>
+
+                {/* datos editables o estáticos */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {editMode ? (
+                    <>
+                      <input
+                        value={inv.nombre}
+                        onChange={e => actualizarCampo(inv.id, "nombre", e.target.value)}
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                          width: "100%", fontSize: 12, fontWeight: 700, color: B.text,
+                          background: B.coolGray, border: `1px solid ${B.glacier}`,
+                          borderRadius: 6, padding: "4px 8px", marginBottom: 4,
+                        }}
+                      />
+                      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                        <span style={{ fontSize: 9, color: B.mid, flexShrink: 0 }}>%</span>
+                        <input
+                          type="number" min={0} max={100}
+                          value={inv.porcentaje}
+                          onChange={e => actualizarCampo(inv.id, "porcentaje", Number(e.target.value))}
+                          onClick={e => e.stopPropagation()}
+                          style={{
+                            width: 60, fontSize: 11, fontWeight: 700, color: B.englishGreen,
+                            background: B.coolGray, border: `1px solid ${B.glacier}`,
+                            borderRadius: 6, padding: "3px 6px",
+                          }}
+                        />
+                        <span style={{ fontSize: 9, color: B.mid }}>{inv.local}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: B.text, marginBottom: 2 }}>{inv.nombre}</div>
+                      <div style={{ fontSize: 9, color: B.mid }}>{inv.local} · {inv.porcentaje}%</div>
+                    </>
+                  )}
                 </div>
-                {estadoConf && (
-                  <span style={{ padding: "3px 8px", borderRadius: 20, fontSize: 7, fontWeight: 700, background: estadoConf.bg, color: estadoConf.color, flexShrink: 0 }}>
-                    {estadoConf.icon} {estadoConf.label}
-                  </span>
+
+                {/* estado badge (modo normal) o botón borrar (modo edición) */}
+                {editMode ? (
+                  <button
+                    onClick={e => borrarInversor(inv.id, e)}
+                    style={{
+                      flexShrink: 0, width: 36, height: 36, borderRadius: 8,
+                      background: B.redPale, border: `1px solid ${B.red}30`,
+                      fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center",
+                    }}
+                  >🗑️</button>
+                ) : (
+                  estadoConf && (
+                    <span style={{ padding: "3px 8px", borderRadius: 20, fontSize: 7, fontWeight: 700, background: estadoConf.bg, color: estadoConf.color, flexShrink: 0 }}>
+                      {estadoConf.icon} {estadoConf.label}
+                    </span>
+                  )
                 )}
               </div>
-              {last && (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-                  <div style={{ background: B.coolGray, borderRadius: 8, padding: "8px 10px" }}>
-                    <div style={{ fontSize: 7, color: B.mid }}>Último dividendo</div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: B.englishGreen }}>{fmt(last.dividendo)}</div>
+
+              {/* mini stats (solo modo normal, clickeable) */}
+              {!editMode && last && (
+                <button onClick={() => setSelected(inv.id)} style={{
+                  width: "100%", padding: "0 14px 14px", background: "none", border: "none", textAlign: "left",
+                }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                    <div style={{ background: B.coolGray, borderRadius: 8, padding: "8px 10px" }}>
+                      <div style={{ fontSize: 7, color: B.mid }}>Último dividendo</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: B.englishGreen }}>{fmt(last.dividendo)}</div>
+                    </div>
+                    <div style={{ background: B.coolGray, borderRadius: 8, padding: "8px 10px" }}>
+                      <div style={{ fontSize: 7, color: B.mid }}>Próximo retiro</div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: B.text }}>{inv.proximo_retiro.fecha}</div>
+                    </div>
                   </div>
-                  <div style={{ background: B.coolGray, borderRadius: 8, padding: "8px 10px" }}>
-                    <div style={{ fontSize: 7, color: B.mid }}>Próximo retiro</div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: B.text }}>{inv.proximo_retiro.fecha}</div>
-                  </div>
-                </div>
+                </button>
               )}
-            </button>
+
+              {/* en modo normal sin informes, igual hacemos clickeable */}
+              {!editMode && !last && (
+                <button onClick={() => setSelected(inv.id)} style={{
+                  width: "100%", padding: "0 14px 14px", background: "none", border: "none",
+                }} />
+              )}
+            </div>
           );
         })}
+
+        {/* Nuevo inversor */}
+        {editMode && (
+          <div style={{ marginTop: 4 }}>
+            {nuevoForm.visible ? (
+              <div style={{
+                background: B.white, borderRadius: 14, padding: 16,
+                border: `1px solid ${B.englishGreen}40`,
+              }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: B.englishGreen, marginBottom: 10 }}>Nuevo inversor</div>
+                <input
+                  placeholder="Nombre"
+                  value={nuevoForm.nombre}
+                  onChange={e => setNuevoForm(f => ({ ...f, nombre: e.target.value }))}
+                  style={{
+                    width: "100%", fontSize: 12, color: B.text,
+                    background: B.coolGray, border: `1px solid ${B.glacier}`,
+                    borderRadius: 8, padding: "8px 10px", marginBottom: 8,
+                  }}
+                />
+                <input
+                  placeholder="Local"
+                  value={nuevoForm.local}
+                  onChange={e => setNuevoForm(f => ({ ...f, local: e.target.value }))}
+                  style={{
+                    width: "100%", fontSize: 12, color: B.text,
+                    background: B.coolGray, border: `1px solid ${B.glacier}`,
+                    borderRadius: 8, padding: "8px 10px", marginBottom: 8,
+                  }}
+                />
+                <input
+                  type="number" min={0} max={100}
+                  placeholder="Porcentaje (0-100)"
+                  value={nuevoForm.porcentaje}
+                  onChange={e => setNuevoForm(f => ({ ...f, porcentaje: e.target.value }))}
+                  style={{
+                    width: "100%", fontSize: 12, color: B.text,
+                    background: B.coolGray, border: `1px solid ${B.glacier}`,
+                    borderRadius: 8, padding: "8px 10px", marginBottom: 12,
+                  }}
+                />
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    onClick={() => setNuevoForm({ visible: false, nombre: "", local: "", porcentaje: "" })}
+                    style={{
+                      flex: 1, padding: "9px", borderRadius: 10, fontSize: 10, fontWeight: 700,
+                      color: B.mid, background: B.coolGray, border: `1px solid ${B.glacier}`,
+                    }}
+                  >Cancelar</button>
+                  <button
+                    onClick={agregarInversor}
+                    style={{
+                      flex: 2, padding: "9px", borderRadius: 10, fontSize: 10, fontWeight: 700,
+                      color: B.white, background: `linear-gradient(135deg, ${B.englishGreen}, #1a5a3a)`,
+                      border: "none",
+                    }}
+                  >Agregar inversor</button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setNuevoForm(f => ({ ...f, visible: true }))}
+                style={{
+                  width: "100%", padding: "14px", borderRadius: 14, fontSize: 11, fontWeight: 700,
+                  color: B.englishGreen, background: B.white,
+                  border: `2px dashed ${B.englishGreen}50`,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                }}
+              >
+                <span style={{ fontSize: 16 }}>+</span> Nuevo inversor
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
