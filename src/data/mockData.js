@@ -222,17 +222,36 @@ export const PLAN_CARRERA_INIT = [
 export const PRECIOS_NAILART = {
   incluido: {
     label:"INCLUIDO", color:B.green, desc:"Sin costo adicional",
-    items:["Francesita / líneas / puntos","Baby shine","Chromas (1 tono)","Papel oro en líneas","Strass y caviar","Corazones / estrellas (2 total)","French con diseño (4 uñas)"],
+    items:[
+      "Francesita / líneas / puntos",
+      "Baby shine",
+      "Chromas (1 solo tono) / Aurora (1 solo tono) / Cat eyes (sin diseño)",
+      "Papel oro / papel plata (en líneas)",
+      "Strass y caviar (10 x set)",
+      "Corazones / estrellas / flores / hojas / fuegos / print (2 en total)",
+      "Nail art — por definir",
+      "French con diseño: chrome, multicolor, cat eye, french alta (4 uñas en total)",
+    ],
     estandar:{efectivo:0,tarjeta:0}, premium:{efectivo:0,tarjeta:0}
   },
   simple: {
     label:"SIMPLE ×2", color:B.pink, desc:"Un diseño por mano",
-    items:["Baby boomer (esponja o pincel)","Baby boomer + brillo"],
+    items:[
+      "Baby boomer (esponja o pincel) / Baby boomer + brillo",
+      "Papel oro y plata (en toda la uña)",
+      "Cat eye con diseño",
+      "Strass / caviar (+ 10 unidades)",
+      "Corazones / estrellas / flores / hojas / fuegos / print (+ 2 unidades)",
+    ],
     estandar:{efectivo:4500,tarjeta:5200}, premium:{efectivo:5500,tarjeta:6000}
   },
   complejo: {
     label:"COMPLEJO", color:"#CAA150", desc:"Diseño en todas las uñas",
-    items:["Baby boomer todas las uñas","Aura todas las uñas","Diseños elaborados"],
+    items:[
+      "Baby boomer / Aura (todas las uñas)",
+      "French con diseño: multicolor, cat eye, french alta, doble francesita, french cromo (en todas las uñas)",
+      "Nail art complejo (uno por mano): mármol / carey / cocodrilo / letras / mariposas",
+    ],
     estandar:{efectivo:6500,tarjeta:7000}, premium:{efectivo:7500,tarjeta:8200}
   },
 };
